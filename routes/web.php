@@ -1,38 +1,32 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\StudentsController;
+use App\Http\Middleware\AuthCheck;
+use Illuminate\Support\Facades\Route;
 
+Route::get('/', function () {
+    return redirect('/login');
+});
 
+// Auth
+Route::get('/login', [AuthController::class, 'index'])->name('auth.index');
+Route::post('/user-login', [AuthController::class, 'login'])->name('auth.login');
 
+Route::get('/register', [AuthController::class, 'indexRegister'])->name('auth.register');
+Route::post('/user-register', [AuthController::class, 'userRegister'])->name('auth.userRegister');
 
-    Route::get('/', function () {
-        return view('home');
-    });
-    // Students Routes
-    Route::get('/students', [StudentsController::class, 'index'])->name('students.index');  // Protected
-    Route::get('/students/search', [StudentsController::class, 'search'])->name('students.search');  // Protected
+Route::middleware([AuthCheck::class])->group(function () {
+    // View
+    Route::get('/students', [StudentsController::class, 'myView'])->name('std.myView');
+    // Create
+    Route::post('/add-new', [StudentsController::class, 'addNewStudent'])->name('std.addNewStudent');
+    // PUT
+    Route::get('/student/update/{id}', [StudentsController::class, 'updateView'])->name('std.updateView');
+    Route::post('/update', [StudentsController::class, 'updateME'])->name('std.studentUpdate');
+    // DELETE
+    Route::get('/delete', [StudentsController::class, 'deleteME'])->name('std.studentDelete');
 
-    
-    // Student Edit Routes
-    Route::get('/students/{id}/edit', [StudentsController::class, 'edit'])->name('students.edit');  // Protected
-    Route::put('/students/{id}', [StudentsController::class, 'update'])->name('students.update');  // Protected
-
-    // Student Delete Routes
-    Route::delete('/students/{id}', [StudentsController::class, 'destroy'])->name('students.destroy');  // Protected
-
-    // Add new student (protected)
-    Route::post('/add-new', [StudentsController::class, 'addNewStudent'])->name('std.addNewStudent');  // Protected
-    // NOte: please take out this from }); to view with out auth Public Students View Route (If needed to be public)
-    // Route::get('/', [StudentsController::class, 'myView'])->name('std.myView'); // Public if required
-
-
-// if you want to view public
-Route::get('/', [StudentsController::class, 'myView'])->name('std.myView'); // Public if required
-
-
-// Example: Public view for home page (no authentication needed)
-//Route::get('/home', function () {
-  //  return view('home');
-//});
+    // Logout
+    Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+});
